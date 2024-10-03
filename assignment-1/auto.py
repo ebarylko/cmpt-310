@@ -41,7 +41,7 @@ features2 = [('cylinders', q3.one_hot),
 #The labels for both are the same, and are in auto_values
 auto_data = [0, 0]
 auto_values = 0
-auto_data[0], auto_values = q3.normalize_and_one_hot_encode_data(car_statistics.to_numpy(), features1)
+auto_data[0], auto_values = q3.auto_data_and_values(car_statistics.to_numpy(), features1)
 # auto_data[1], _ = q3.auto_data_and_values(car_statistics, features2)
 #
 # #standardize the y-values

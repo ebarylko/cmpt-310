@@ -2,7 +2,7 @@
 import numpy as np
 import csv
 import itertools, functools, operator
-
+import toolz as tz
 import pandas as pd
 
 
@@ -431,7 +431,7 @@ def raw(x):
     '''
     return [x]
 
-def one_hot(v, entries):
+def one_hot_old(v, entries):
     '''
     Outputs a one hot vector. Helper function to be used in auto_data_and_labels.
     v is the index of the "1" in the one-hot vector.
@@ -447,6 +447,24 @@ def one_hot(v, entries):
     return vec
 
 
+def one_hot(feature_column):
+    """
+    @param feature_column: a column containing values
+    @return: the updated column after one-hot encoding it
+    """
+    def pos_to_encoding(num_of_elems, pos):
+        empty_vec = [0] * num_of_elems
+        empty_vec[pos] = 1
+        return empty_vec
+
+    unique_entries = feature_column.unique()
+    num_of_entries = len(unique_entries)
+    encodings = map(tz.partial(pos_to_encoding, num_of_entries),
+                    range(num_of_entries))
+    entry_to_encoding = dict(zip(unique_entries, encodings))
+    return feature_column.map(entry_to_encoding)
+
+
 def auto_data_and_values(car_statistics, features_to_scaling_function):
     return normalize_and_one_hot_encode_data(car_statistics, features_to_scaling_function)
 
@@ -455,26 +473,24 @@ def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_s
     """
     @param car_statistics: a collection of information about various cars, where each row contains the number
      of cylinders, displacement, horsepower, and more info
-    @param feature_to_scaling_func: a map of features to the function used for scaling that feature
-    @return: scales the features in car_statistics and returns the updated values
+    @param feature_to_scaling_func: a series of collections where each contains a feature and the function used for
+    scaling that feature
+    @return: scales the features in car_statistics using feature_to_scaling_func and returns the updated values
     """
-    # features = [('mpg', raw)] + features
-    # std = {f:std_vals(auto_data, f) for (f, phi) in features if phi==standard}
-    # entries = {f:list(set([entry[f] for entry in auto_data])) \
-    #            for (f, phi) in features if phi==one_hot}
-    # vals = []
-    # for entry in auto_data:
-    #     phis = []
-    #     for (f, phi) in features:
-    #         if phi == standard:
-    #             phis.extend(phi(entry[f], std[f]))
-    #         elif phi == one_hot:
-    #             phis.extend(phi(entry[f], entries[f]))
-    #         else:
-    #             phis.extend(phi(entry[f]))
-    #     vals.append(np.array([phis]))
-    # data_labels = np.vstack(vals)
-    # return data_labels[:, 1:].T, data_labels[:, 0:1].T
+    def scale_feature_by(data, feature_to_func):
+        cpy = data.copy()
+        feature, func = feature_to_func
+        return func(cpy[feature])
+
+    def join_scaled_features(features):
+        return pd.concat(features, axis=1)
+
+    scale_feature_using_func = tz.partial(scale_feature_by, car_statistics)
+
+    return tz.thread_last(feature_to_scaling_func,
+                          (map, scale_feature_using_func),
+                          list,
+                          join_scaled_features )
 
 ######################################################################
 def std_y(row):
