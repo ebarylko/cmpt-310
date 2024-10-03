@@ -3,6 +3,9 @@ import numpy as np
 import csv
 import itertools, functools, operator
 
+import pandas as pd
+
+
 # Takes a list of numbers and returns a column vector:  n x 1
 def cv(value_list):
     """ Return a d x 1 np array.
@@ -400,6 +403,7 @@ def std_vals(data, f):
     >>> std_vals(data, f)
     (6.5, 2.5)
     '''
+    print(data, "\n", f)
     vals = [entry[f] for entry in data]
     avg = sum(vals)/len(vals)
     dev = [(entry[f] - avg)**2 for entry in data]
@@ -442,24 +446,35 @@ def one_hot(v, entries):
     vec[entries.index(v)] = 1
     return vec
 
-def auto_data_and_values(auto_data, features):
-    features = [('mpg', raw)] + features
-    std = {f:std_vals(auto_data, f) for (f, phi) in features if phi==standard}
-    entries = {f:list(set([entry[f] for entry in auto_data])) \
-               for (f, phi) in features if phi==one_hot}
-    vals = []
-    for entry in auto_data:
-        phis = []
-        for (f, phi) in features:
-            if phi == standard:
-                phis.extend(phi(entry[f], std[f]))
-            elif phi == one_hot:
-                phis.extend(phi(entry[f], entries[f]))
-            else:
-                phis.extend(phi(entry[f]))
-        vals.append(np.array([phis]))
-    data_labels = np.vstack(vals)
-    return data_labels[:, 1:].T, data_labels[:, 0:1].T
+
+def auto_data_and_values(car_statistics, features_to_scaling_function):
+    return normalize_and_one_hot_encode_data(car_statistics, features_to_scaling_function)
+
+
+def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_scaling_func):
+    """
+    @param car_statistics: a collection of information about various cars, where each row contains the number
+     of cylinders, displacement, horsepower, and more info
+    @param feature_to_scaling_func: a map of features to the function used for scaling that feature
+    @return: scales the features in car_statistics and returns the updated values
+    """
+    # features = [('mpg', raw)] + features
+    # std = {f:std_vals(auto_data, f) for (f, phi) in features if phi==standard}
+    # entries = {f:list(set([entry[f] for entry in auto_data])) \
+    #            for (f, phi) in features if phi==one_hot}
+    # vals = []
+    # for entry in auto_data:
+    #     phis = []
+    #     for (f, phi) in features:
+    #         if phi == standard:
+    #             phis.extend(phi(entry[f], std[f]))
+    #         elif phi == one_hot:
+    #             phis.extend(phi(entry[f], entries[f]))
+    #         else:
+    #             phis.extend(phi(entry[f]))
+    #     vals.append(np.array([phis]))
+    # data_labels = np.vstack(vals)
+    # return data_labels[:, 1:].T, data_labels[:, 0:1].T
 
 ######################################################################
 def std_y(row):
