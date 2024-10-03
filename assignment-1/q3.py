@@ -452,17 +452,7 @@ def one_hot(feature_column):
     @param feature_column: a column containing values
     @return: the updated column after one-hot encoding it
     """
-    def pos_to_encoding(num_of_elems, pos):
-        empty_vec = [0] * num_of_elems
-        empty_vec[pos] = 1
-        return empty_vec
-
-    unique_entries = feature_column.unique()
-    num_of_entries = len(unique_entries)
-    encodings = map(tz.partial(pos_to_encoding, num_of_entries),
-                    range(num_of_entries))
-    entry_to_encoding = dict(zip(unique_entries, encodings))
-    return feature_column.map(entry_to_encoding)
+    return pd.get_dummies(feature_column)
 
 
 def auto_data_and_values(car_statistics, features_to_scaling_function):
@@ -490,7 +480,7 @@ def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_s
     return tz.thread_last(feature_to_scaling_func,
                           (map, scale_feature_using_func),
                           list,
-                          join_scaled_features )
+                          join_scaled_features)
 
 ######################################################################
 def std_y(row):

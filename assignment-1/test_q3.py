@@ -20,8 +20,8 @@ def test_normalize_and_one_hot_encode_data():
 
 sample = pd.Series([1, 2, 3, 3])
 
-expected_encoding = pd.Series([[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, 1]])
+expected_encoding = pd.DataFrame([[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, 1]], columns=[1, 2, 3])
 
 
 def test_one_hot():
-    pdt.assert_series_equal(expected_encoding, q.one_hot(sample))
+    pdt.assert_frame_equal(expected_encoding, q.one_hot(sample), check_dtype=False)
