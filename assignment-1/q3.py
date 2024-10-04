@@ -403,14 +403,13 @@ def std_vals(data, f):
     >>> std_vals(data, f)
     (6.5, 2.5)
     '''
-    print(data, "\n", f)
     vals = [entry[f] for entry in data]
     avg = sum(vals)/len(vals)
     dev = [(entry[f] - avg)**2 for entry in data]
     sd = (sum(dev)/len(vals))**0.5
     return (avg, sd)
 
-def standard(v, std):
+def old_standard(v, std):
     '''
     Helper function to be used in auto_data_and_labels. Center v by the 0-th element of std and scale by the 1-st element of std. 
     >>> data = np.array([1,2,3,4,5])
@@ -422,6 +421,14 @@ def standard(v, std):
     '''
     return [(v-std[0])/std[1]]
 
+
+# def standard(feature_column):
+#     """
+#     @param feature_column: a column containing values for a feature
+#     @return: the updated values of feature_column after applying z-score normalization
+#     """
+#     return (feature_column - feature_column.mean()) / feature_column.std()
+
 def raw(x):
     '''
     Make x into a nested list. Helper function to be used in auto_data_and_labels.
@@ -431,32 +438,17 @@ def raw(x):
     '''
     return [x]
 
-def one_hot_old(v, entries):
-    '''
-    Outputs a one hot vector. Helper function to be used in auto_data_and_labels.
-    v is the index of the "1" in the one-hot vector.
-    entries is range(k) where k is the length of the desired onehot vector. 
+# def one_hot(feature_column):
+#     """
+#     @param feature_column: a column containing values
+#     @return: the updated column after one-hot encoding it
+#     """
+#     return pd.get_dummies(feature_column)
+#
 
-    >>> one_hot(2, range(4))
-    [0, 0, 1, 0]
-    >>> one_hot(1, range(5))
-    [0, 1, 0, 0, 0]
-    '''
-    vec = len(entries)*[0]
-    vec[entries.index(v)] = 1
-    return vec
-
-
-def one_hot(feature_column):
-    """
-    @param feature_column: a column containing values
-    @return: the updated column after one-hot encoding it
-    """
-    return pd.get_dummies(feature_column)
-
-
-def auto_data_and_values(car_statistics, features_to_scaling_function):
-    return normalize_and_one_hot_encode_data(car_statistics, features_to_scaling_function)
+# def auto_data_and_values(car_statistics, features_to_scaling_function):
+#     normalized_data = normalize_and_one_hot_encode_data(car_statistics, features_to_scaling_function).to_numpy()
+#     return normalized_data[:, 1:].T, normalized_data[:, :1].T,
 
 
 def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_scaling_func):
@@ -491,3 +483,52 @@ def std_y(row):
     mu = np.mean(row, axis=1)
     sigma = np.sqrt(np.mean((row - mu)**2, axis=1))
     return np.array([(val - mu)/(1.0*sigma) for val in row]), mu, sigma
+
+
+def one_hot(v, entries):
+    '''
+    Outputs a one hot vector. Helper function to be used in auto_data_and_labels.
+    v is the index of the "1" in the one-hot vector.
+    entries is range(k) where k is the length of the desired onehot vector.
+
+    >>> one_hot(2, range(4))
+    [0, 0, 1, 0]
+    >>> one_hot(1, range(5))
+    [0, 1, 0, 0, 0]
+    '''
+    vec = len(entries)*[0]
+    vec[entries.index(v)] = 1
+    return vec
+
+def standard(v, std):
+    '''
+    Helper function to be used in auto_data_and_labels. Center v by the 0-th element of std and scale by the 1-st element of std.
+    >>> data = np.array([1,2,3,4,5])
+    >>> standard(data, (3,1))
+    [array([-2., -1.,  0.,  1.,  2.])]
+    >>> data = np.array([1,2,5,7,8])
+    >>> standard(data, (3,1))
+    [array([-2., -1.,  2.,  4.,  5.])]
+    '''
+    return [(v-std[0])/std[1]]
+
+def auto_data_and_values(auto_data, features):
+    features = [('mpg', raw)] + features
+    std = {f:std_vals(auto_data, f) for (f, phi) in features if phi==standard}
+    entries = {f:list(set([entry[f] for entry in auto_data])) \
+               for (f, phi) in features if phi==one_hot}
+    vals = []
+    for entry in auto_data:
+        phis = []
+        for (f, phi) in features:
+            if phi == standard:
+                phis.extend(phi(entry[f], std[f]))
+            elif phi == one_hot:
+                phis.extend(phi(entry[f], entries[f]))
+            else:
+                phis.extend(phi(entry[f]))
+        vals.append(np.array([phis]))
+    data_labels = np.vstack(vals)
+    return data_labels[:, 1:].T, data_labels[:, 0:1].T
+
+
