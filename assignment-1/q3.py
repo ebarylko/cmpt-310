@@ -451,6 +451,29 @@ def raw(x):
 #     return normalized_data[:, 1:].T, normalized_data[:, :1].T,
 
 
+def read_car_data(filename):
+    return pd.read_csv(filename, sep='\t')
+
+
+def filter_features(df: pd.DataFrame, wanted_features):
+    """
+    @param df: a DataFrame
+    @param wanted_features: the feature columns to keep
+    @return: a DataFrame only containing the columns in df which are in wanted_features
+    """
+    return df.filter(items=wanted_features)
+
+
+def has_good_mileage(df: pd.DataFrame) -> pd.Series:
+    """
+    @param df: a DataFrame where each row contains information about cars, such as horsepower, mpg,
+    acceleration, and more info
+    @return: a Series noting whether each car has a poor or good mileage
+    """
+    mpg_median = df['mpg'].median()
+    return df['mpg'] >= mpg_median
+
+
 def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_scaling_func):
     """
     @param car_statistics: a collection of information about various cars, where each row contains the number

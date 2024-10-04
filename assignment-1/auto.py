@@ -11,8 +11,10 @@ import pandas as pd
 #                    "acceleration",
 #                    "origin",
 #                    "mpg"]
-
-# car_statistics = pd.read_csv('auto-mpg-regression.csv').filter(items=wanted_features)
+#
+# car_statistics2 = pd.read_csv('auto-mpg-regression.csv').filter(items=wanted_features)
+car_statistics2 = q3.read_car_data('auto-mpg-regression.tsv')
+print(car_statistics2)
 car_statistics = q3.load_auto_data("auto-mpg-regression.tsv")
 #-------------------------------------------------------------------------------
 
@@ -42,16 +44,18 @@ features2 = [('cylinders', q3.one_hot),
 #auto_data[0] has the features for choice features1
 #auto_data[1] has the features for choice features2
 #The labels for both are the same, and are in auto_values
-auto_data = [0, 0]
-auto_values = 0
-auto_data[0], auto_values = q3.auto_data_and_values(car_statistics, features1)
-auto_data[1], _ = q3.auto_data_and_values(car_statistics, features2)
-#
+feature_columns_1, mpg_column = q3.auto_data_and_values(car_statistics, features1)
+feature_columns_2, _ = q3.auto_data_and_values(car_statistics, features2)
+# print(feature_columns_1)
+# print(list(zip(*feature_columns_1)))
+
 # #standardize the y-values
-auto_values, mu, sigma = q3.std_y(auto_values)
+scaled_mpg_column, mu, sigma = q3.std_y(mpg_column)
 #
 # #-------------------------------------------------------------------------------
 # # Analyze auto data
 # #-------------------------------------------------------------------------------
 #
 # #Your code for cross-validation goes here
+
+# k_nearest_neighbours()
