@@ -1,4 +1,5 @@
-
+from sklearn.preprocessing import StandardScaler
+from scipy.stats import zscore
 import numpy as np
 import csv
 import itertools, functools, operator
@@ -464,14 +465,28 @@ def filter_features(df: pd.DataFrame, wanted_features):
     return df.filter(items=wanted_features)
 
 
-def has_good_mileage(df: pd.DataFrame) -> pd.Series:
+def add_mileage_label(df: pd.DataFrame) -> pd.DataFrame:
     """
     @param df: a DataFrame where each row contains information about cars, such as horsepower, mpg,
     acceleration, and more info
-    @return: a Series noting whether each car has a poor or good mileage
+    @return: adds a column to df which notes whether a given car has a poor or good mileage.
     """
     mpg_median = df['mpg'].median()
-    return df['mpg'] >= mpg_median
+    return df.assign(has_good_mpg=df['mpg'] >= mpg_median)
+
+
+def scale_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    @param df: a DataFrame containing information about cars from the 1970s, such as mpg,
+    acceleration, and displacement
+    @return: a DataFrame having all the features except the mileage label scaled
+    """
+    cpy = df.copy()
+    features_except_mpg, mpg_column = cpy.drop('has_good_mpg', axis="columns"), cpy['has_good_mpg']
+
+    scaled_features = zscore(features_except_mpg)
+    return pd.concat([scaled_features, mpg_column], axis=1)
+
 
 
 def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_scaling_func):
