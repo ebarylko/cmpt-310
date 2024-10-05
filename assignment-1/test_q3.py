@@ -5,18 +5,18 @@ import operator as op
 import functools as ft
 import pandas.testing as pdt
 
-sample_data = pd.DataFrame({"mpg": [1, 2, 3, 4],
-                            "displacement": [3, 4, 5, 6]})
-
-feature_to_scaling_function = [("mpg", ft.partial(op.add, 1)),
-                               ("displacement", ft.partial(op.mul, 2))]
-
-expected = pd.DataFrame({"mpg": [2, 3, 4, 5],
-                         "displacement": [6, 8, 10, 12]})
-
-
-def test_normalize_and_one_hot_encode_data():
-    pdt.assert_frame_equal(q.normalize_and_one_hot_encode_data(sample_data, feature_to_scaling_function), expected)
+# sample_data = pd.DataFrame({"mpg": [1, 2, 3, 4],
+#                             "displacement": [3, 4, 5, 6]})
+#
+# feature_to_scaling_function = [("mpg", ft.partial(op.add, 1)),
+#                                ("displacement", ft.partial(op.mul, 2))]
+#
+# expected_df = pd.DataFrame({"mpg": [2, 3, 4, 5],
+#                          "displacement": [6, 8, 10, 12]})
+#
+#
+# def test_normalize_and_one_hot_encode_data():
+#     pdt.assert_frame_equal(q.normalize_and_one_hot_encode_data(sample_data, feature_to_scaling_function), expected_df)
 #
 #
 # sample = pd.Series([1, 2, 3, 3])
@@ -75,15 +75,46 @@ expected_third_training_set, expected_third_test_set   = (pd.DataFrame({"mpg": [
                                                                                   "acceleration": [6],
                                                                                   "has_good_mpg": [True]}))
 
-(training_data_1, test_data_1), (training_data_2, test_data_2), (
-    training_data_3, test_data_3) = q3.generate_10_fold_cross_validation_data(sample_info)
+# (training_data_1, test_data_1), (training_data_2, test_data_2), (
+#     training_data_3, test_data_3) = q3.generate_10_fold_cross_validation_data(sample_info)
+
+actual_data_1, actual_data_2, actual_data_3 = q3.generate_10_fold_cross_validation_data(sample_info)
+
+
+expected_1 = (pd.DataFrame({"mpg": [2, 3],
+                            "acceleration": [5, 6],
+                            "has_good_mpg": [True, True]},
+                           index=[1, 2]),
+              pd.DataFrame({"mpg": [1],
+                            "acceleration": [3],
+                            "has_good_mpg": [False]}))
+
+expected_2 = (pd.DataFrame({"mpg": [1, 3],
+                            "acceleration": [3, 6],
+                            "has_good_mpg": [False, True]},
+                           index=[0, 2]),
+              pd.DataFrame({"mpg": [2],
+                            "acceleration": [5],
+                            "has_good_mpg": [True]},
+                           index=[1]))
+
+expected_3 = (pd.DataFrame({"mpg": [1, 2],
+                            "acceleration": [3, 5],
+                            "has_good_mpg": [False, True]}),
+              pd.DataFrame({"mpg": [3],
+                            "acceleration": [6],
+                            "has_good_mpg": [True]},
+                           index=[2]))
+
+
+def assert_training_and_test_data_match(expected, actual):
+    expected_training_data, expected_test_data = expected
+    actual_training_data, actual_test_data = actual
+    pdt.assert_frame_equal(expected_training_data, actual_training_data)
+    pdt.assert_frame_equal(expected_test_data, actual_test_data)
 
 
 def test_generate_10_fold_cross_validation_data():
-    pdt.assert_frame_equal(training_data_1, expected_first_training_set)
-    # pdt.assert_frame_equal(training_data_2, expected_second_training_set)
-    # pdt.assert_frame_equal(training_data_3, expected_third_training_set)
-    #
-    # pdt.assert_frame_equal(test_data_1, expected_first_test_set)
-    # pdt.assert_frame_equal(test_data_2, expected_second_test_set)
-    # pdt.assert_frame_equal(test_data_3, expected_third_test_set)
+    assert_training_and_test_data_match(expected_1, actual_data_1)
+    assert_training_and_test_data_match(expected_2, actual_data_2)
+    assert_training_and_test_data_match(expected_3, actual_data_3)
