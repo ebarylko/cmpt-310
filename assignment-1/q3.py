@@ -488,6 +488,29 @@ def scale_features(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([scaled_features, mpg_column], axis=1)
 
 
+def training_data_and_test_data(partitioned_data: list[pd.DataFrame], current_test_set):
+    """
+    @param partitioned_data: a DataFrame split into ten groups
+    @param current_test_set: the current partition of partitioned_data considered as the test data
+    and its index within the split
+    @return: the training data associated with current_test_set and the current test data
+    """
+    idx, test_data = current_test_set
+    training_data = pd.concat(partitioned_data[:idx] + partitioned_data[idx + 1:])
+    return training_data, test_data
+
+
+def generate_10_fold_cross_validation_data(data: pd.DataFrame):
+    """
+    @param data: a DataFrame where each row contains the mpg,
+    acceleration, and displacement of a car among other information
+    @return: splits the data into ten disjoint test dataset and pairs each with
+    the corresponding training dataset
+    """
+    split_data = list(filter(lambda df: not df.empty, np.array_split(data, 10)))
+    get_training_and_test_data = tz.partial(training_data_and_test_data, split_data)
+    return list(map(get_training_and_test_data, enumerate(split_data)))
+
 
 def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_scaling_func):
     """
@@ -568,5 +591,4 @@ def auto_data_and_values(auto_data, features):
         vals.append(np.array([phis]))
     data_labels = np.vstack(vals)
     return data_labels[:, 1:].T, data_labels[:, 0:1].T
-
 

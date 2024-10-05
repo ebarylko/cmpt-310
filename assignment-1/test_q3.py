@@ -49,3 +49,41 @@ expected_scaled_data = pd.DataFrame({"mpg": [-1.22474487, 0, 1.22474487],
 
 def test_scale_features():
     pdt.assert_frame_equal(q3.scale_features(sample), expected_scaled_data)
+
+
+sample_info = pd.DataFrame({"mpg": [1, 2, 3],
+                            "acceleration": [3, 5, 6],
+                            "has_good_mpg": [False, True, True]})
+
+expected_first_training_set, expected_first_test_set = (pd.DataFrame({"mpg": [2, 3],
+                                                                      "acceleration": [5, 6],
+                                                                      "has_good_mpg": [True, True]},
+                                                                     index=[1, 2]), pd.DataFrame({"mpg": [1],
+                                                                                                  "acceleration": [3],
+                                                                                                  "has_good_mpg": [False]}))
+
+expected_second_training_set, expected_second_test_set  = (pd.DataFrame({"mpg": [1, 3],
+                                    "acceleration": [3, 6],
+                                     "has_good_mpg": [False, True]}), pd.DataFrame({"mpg": [2],
+                                                                                    "acceleration": [5],
+                                                                                    "has_good_mpg": [True]}))
+
+
+expected_third_training_set, expected_third_test_set   = (pd.DataFrame({"mpg": [1, 2],
+                                    "acceleration": [3, 5],
+                                    "has_good_mpg": [False, True]}), pd.DataFrame({"mpg": [3],
+                                                                                  "acceleration": [6],
+                                                                                  "has_good_mpg": [True]}))
+
+(training_data_1, test_data_1), (training_data_2, test_data_2), (
+    training_data_3, test_data_3) = q3.generate_10_fold_cross_validation_data(sample_info)
+
+
+def test_generate_10_fold_cross_validation_data():
+    pdt.assert_frame_equal(training_data_1, expected_first_training_set)
+    # pdt.assert_frame_equal(training_data_2, expected_second_training_set)
+    # pdt.assert_frame_equal(training_data_3, expected_third_training_set)
+    #
+    # pdt.assert_frame_equal(test_data_1, expected_first_test_set)
+    # pdt.assert_frame_equal(test_data_2, expected_second_test_set)
+    # pdt.assert_frame_equal(test_data_3, expected_third_test_set)

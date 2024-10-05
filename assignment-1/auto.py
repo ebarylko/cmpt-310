@@ -63,8 +63,7 @@ car_statistics2 = (q3.read_car_data('auto-mpg-regression.tsv')
                    .pipe(q3.filter_features, wanted_features)
                    .pipe(q3.add_mileage_label)
                    .drop('mpg', axis="columns")
-                   #.pipe(q3.scale_features)
-                   )
+                   .pipe(q3.scale_features))
 
 print(car_statistics2)
 
