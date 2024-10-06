@@ -102,5 +102,26 @@ def average_accuracy_and_f1_score(datasets, num_of_neighbours):
     return tz.thread_last(datasets,
                           (map, accuracy_and_f1_score),
                           list,
-                          tz.partial(np.average, axis=0),
-                          )
+                          tz.partial(np.average, axis=0))
+
+
+if __name__ == '__main__':
+
+    wanted_features = ["cylinders",
+                       "displacement",
+                       "horsepower",
+                       "weight",
+                       "acceleration",
+                       "mpg"]
+
+    cross_validation_data = (read_car_data('auto-mpg-regression.tsv')
+                             .pipe(filter_features, wanted_features)
+                             .pipe(add_mileage_label)
+                             .drop('mpg', axis="columns")
+                             .pipe(scale_features)
+                             .pipe(generate_10_fold_cross_validation_data))
+
+    averages = list(map(average_accuracy_and_f1_score(cross_validation_data), [3, 6, 10, 16, 25]))
+    print(averages)
+
+

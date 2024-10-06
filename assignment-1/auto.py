@@ -54,20 +54,3 @@ scaled_mpg_column, mu, sigma = q3.std_y(mpg_column)
 # #-------------------------------------------------------------------------------
 #
 # #Your code for cross-validation goes here
-wanted_features = ["cylinders",
-                   "displacement",
-                   "horsepower",
-                   "weight",
-                   "acceleration",
-                   "mpg"]
-cross_validation_data = (q2.read_car_data('auto-mpg-regression.tsv')
-                         .pipe(q2.filter_features, wanted_features)
-                         .pipe(q2.add_mileage_label)
-                         .drop('mpg', axis="columns")
-                         .pipe(q2.scale_features)
-                         .pipe(q2.generate_10_fold_cross_validation_data))
-
-averages = list(map(q2.average_accuracy_and_f1_score(cross_validation_data), [3, 6, 10, 16, 25]))
-print(averages)
-
-
