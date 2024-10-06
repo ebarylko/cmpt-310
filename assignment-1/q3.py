@@ -131,8 +131,9 @@ def d_mean_square_loss_th(x, y, th, th0):
     >>> d_mean_square_loss_th(X[:,0:1], Y[:,0:1], th, th0).tolist()
     [[4.1], [4.1]]
     """
-    #Your code here [3]
-    pass
+    number_of_columns = x.shape[1]
+    return d_square_loss_th(x, y, th, th0) / number_of_columns
+
 
 def d_lin_reg_th0(x, th, th0):
     """ Returns the gradient of lin_reg(x, th, th0) with respect to th0.
@@ -142,8 +143,8 @@ def d_lin_reg_th0(x, th, th0):
     >>> d_lin_reg_th0(x, th, th0).tolist()
     [[1.0, 1.0, 1.0, 1.0]]
     """
-    #Your code here [4]
-    pass
+    return 1
+
 
 def d_square_loss_th0(x, y, th, th0):
     """ Returns the gradient of square_loss(x, y, th, th0) with
@@ -155,8 +156,7 @@ def d_square_loss_th0(x, y, th, th0):
     >>> d_square_loss_th0(X, Y, th, th0).tolist()
     [[4.1, 3.6999999999999993, 4.5, 3.9000000000000004]]
     """
-    #Your code here [5] 
-    pass
+    return -2 * (y - lin_reg(x, th, th0)) * d_lin_reg_th0(x, th, th0)
 
 def d_mean_square_loss_th0(x, y, th, th0):
     """ Returns the gradient of mean_square_loss(x, y, th, th0) with
@@ -168,8 +168,7 @@ def d_mean_square_loss_th0(x, y, th, th0):
     >>> d_mean_square_loss_th0(X, Y, th, th0).tolist()
     [[4.05]]
     """
-    #Your code here [6]
-    pass
+    return d_square_loss_th(x, y, th, th0) / x.shape[1]
 
 def d_ridge_obj_th(x, y, th, th0, lam):
     """Return the derivative of tghe ridge objective value with respect
