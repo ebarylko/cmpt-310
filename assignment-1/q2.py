@@ -2,6 +2,9 @@ import toolz as tz
 import pandas as pd
 import numpy as np
 from scipy.stats import zscore
+import operator as op
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import f1_score
 
 
 def read_car_data(filename):
@@ -59,7 +62,45 @@ def generate_10_fold_cross_validation_data(data: pd.DataFrame):
     @return: splits the data into ten disjoint test dataset and pairs each with
     the corresponding training dataset
     """
-    split_data = list(filter(lambda df: not df.empty, np.array_split(data, 10)))
+    not_empty = tz.complement(op.attrgetter("empty"))
+    split_data = list(filter(not_empty, np.array_split(data, 10)))
+
     get_training_and_test_data = tz.partial(extract_training_and_test_data, split_data)
     return list(map(get_training_and_test_data, enumerate(split_data)))
 
+
+@tz.curry
+def average_accuracy_and_f1_score(datasets, num_of_neighbours):
+    """
+    @param datasets: a collection of datasets, each containing training and validation data
+    number of neighbours to use for the model
+    @param num_of_neighbours: the number of neighbours to compare against
+    @return: the average accuracy and f1 score of a K-nearest neighbours model applied on each
+    dataset, where k = num_of_neighbours
+
+    """
+    def accuracy_and_f1_score(dataset):
+        """
+        @param dataset: a dataset containing training and validation data
+        @return: the accuracy and f1 score for a KNN model trained on the training data
+        and comparing with num_of_neighbours many neighbours
+        """
+        training_dataset, test_dataset = dataset
+        training_data, training_mileage_labels = (training_dataset.drop("has_good_mpg", axis='columns'),
+                                                  training_dataset['has_good_mpg'])
+
+        test_data, test_mileage_labels = (test_dataset.drop("has_good_mpg", axis='columns'),
+                                          test_dataset['has_good_mpg'])
+
+        model = (KNeighborsClassifier(n_neighbors=num_of_neighbours)
+                 .fit(training_data, training_mileage_labels))
+
+        actual_mileage_labels = model.predict(test_data)
+        return (model.score(test_data, test_mileage_labels),
+                f1_score(test_mileage_labels, actual_mileage_labels))
+
+    return tz.thread_last(datasets,
+                          (map, accuracy_and_f1_score),
+                          list,
+                          tz.partial(np.average, axis=0),
+                          )
