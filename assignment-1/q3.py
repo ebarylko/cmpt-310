@@ -3,6 +3,8 @@ import csv
 import itertools, functools, operator
 import toolz as tz
 import pandas as pd
+from functools import reduce
+from collections import namedtuple
 
 
 # Takes a list of numbers and returns a column vector:  n x 1
@@ -214,11 +216,14 @@ def d_ridge_obj_th0(x, y, th, th0, lam):
 def ridge_obj_grad(x, y, th, th0, lam):
     grad_th = d_ridge_obj_th(x, y, th, th0, lam)
     grad_th0 = d_ridge_obj_th0(x, y, th, th0, lam)
-    return np.vstack([grad_th, grad_th0])    
+    return np.vstack([grad_th, grad_th0])
+
+
+WeightInfo = namedtuple("WeightInfo",
+                        ["weight", "all_weights", "all_costs"])
 
 def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
     """Implements stochastic gradient descent
-
     Inputs:
     X: a standard data array (d by n)
     y: a standard labels row vector (1 by n)
@@ -244,10 +249,34 @@ def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
     w: the value of the weight vector at the final step
     fs: the list of values of JJJ found during all the iterations
     ws: the list of values of www found during all the iterations
-
     """
-    #Your code here [9]
-    pass
+    def calculate_new_weight(weight_info, curr_iteration):
+        num_of_columns = X.shape[1]
+        num_of_rows = X.shape[0]
+        idx = curr_iteration % num_of_columns
+        curr_x = np.array(X.T[idx, :]).reshape(num_of_rows, 1)
+        expected_label = y[0, idx]
+        step_size = step_size_fn(curr_iteration)
+        new_weight = weight_info.weight - step_size * dJ(curr_x, expected_label, np.array(weight_info.weight))
+        cost = J(curr_x, expected_label, np.array(weight_info.weight))
+        return WeightInfo(new_weight, weight_info.all_weights + [new_weight], weight_info.all_costs + [cost])
+
+    iterations = range(max_iter)
+    return reduce(calculate_new_weight, iterations, WeightInfo(w0, [], []))
+    # w = w0
+    # data = X.T
+    # num_of_columns = X.shape[1]
+    # for iteration in range(max_iter):
+    #     idx = iteration % num_of_columns
+    #     x = np.atleast_2d(data[idx, :]).T
+    #     expected = y[0, idx]
+    #     step_size = step_size_fn(iteration)
+    #     cost = J(x, expected, np.array(w))
+    #     w += -step_size * dJ(x, expected, np.array(w))
+    #     print("The cost and new weights are ", cost, w, "\n")
+    # return w
+
+
 
 ############################################################
 def num_grad(f):
@@ -283,9 +312,12 @@ def sgdTest():
         def f(w): return J(Xi, yi, w)
         return num_grad(f)(w)
 
-    #Your code here [10]
-    pass
+    def svm_min_step_size_fn(i):
+        return 0.01/(i+1)**0.5
 
+    d, n = X.shape
+    w_init = np.zeros((d+1, 1))
+    assert sgd(X, y, J, dJ, w_init, svm_min_step_size_fn, 1000) == 3
 ############################################################
 
 def ridge_min(X, y, lam):

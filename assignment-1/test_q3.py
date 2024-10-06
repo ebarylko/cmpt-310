@@ -58,3 +58,50 @@ def test_d_ridge_obj_th0():
     npt.assert_array_equal(q.d_ridge_obj_th0(X, Y, th, th0, 100.), np.array([[4.05]]))
 
 
+X = np.array([[0.0, 0.1, 0.2, 0.3, 0.42, 0.52, 0.72, 0.78, 0.84, 1.0],
+              [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]])
+y = np.array([[0.4, 0.6, 1.2, 0.1, 0.22, -0.6, -1.5, -0.5, -0.5, 0.0]])
+
+
+def J(Xi, yi, w):
+    # translate from (1-augmented X, y, theta) to (separated X, y, th, th0) format
+    return float(q.ridge_obj(Xi[:-1, :], yi, w[:-1, :], w[-1:, :], 0))
+
+
+def dJ(Xi, yi, w):
+    def f(w): return J(Xi, yi, w)
+
+    return q.num_grad(f)(w)
+
+
+def svm_min_step_size_fn(i):
+    return 0.01 / (i + 1) ** 0.5
+
+
+d, n = X.shape
+X_extend = np.vstack([X, np.ones((1, n))])
+w_init = np.zeros((d + 1, 1))
+
+print(q.sgd(X_extend, y, J, dJ, w_init, svm_min_step_size_fn, 1000)[2])
+
+def test_sgd():
+    X = np.array([[0.0, 0.1, 0.2, 0.3, 0.42, 0.52, 0.72, 0.78, 0.84, 1.0],
+                  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]])
+    y = np.array([[0.4, 0.6, 1.2, 0.1, 0.22, -0.6, -1.5, -0.5, -0.5, 0.0]])
+
+    def J(Xi, yi, w):
+        # translate from (1-augmented X, y, theta) to (separated X, y, th, th0) format
+        return float(q.ridge_obj(Xi[:-1, :], yi, w[:-1, :], w[-1:, :], 0))
+
+    def dJ(Xi, yi, w):
+        def f(w): return J(Xi, yi, w)
+
+        return q.num_grad(f)(w)
+
+    def svm_min_step_size_fn(i):
+        return 0.01 / (i + 1) ** 0.5
+
+    d, n = X.shape
+    X_extend = np.vstack([X, np.ones((1, n))])
+    w_init = np.zeros((d+1, 1))
+    npt.assert_array_equal(q.sgd(X_extend, y, J, dJ, w_init, svm_min_step_size_fn, 1000), np.array([1, 2, 4]))

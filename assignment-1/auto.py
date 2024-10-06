@@ -48,6 +48,9 @@ feature_columns_2, _ = q3.auto_data_and_values(car_statistics, features2)
 
 # #standardize the y-values
 scaled_mpg_column, mu, sigma = q3.std_y(mpg_column)
+# print(car_statistics)
+
+print(q3.make_polynomial_feature_fun(3)(car_statistics))
 #
 # #-------------------------------------------------------------------------------
 # # Analyze auto data
