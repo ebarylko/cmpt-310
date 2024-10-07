@@ -222,6 +222,7 @@ def ridge_obj_grad(x, y, th, th0, lam):
 WeightInfo = namedtuple("WeightInfo",
                         ["weight", "all_weights", "all_costs"])
 
+
 def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
     """Implements stochastic gradient descent
     Inputs:
@@ -250,7 +251,7 @@ def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
     fs: the list of values of JJJ found during all the iterations
     ws: the list of values of www found during all the iterations
     """
-    def calculate_new_weight(weight_info, curr_iteration):
+    def calculate_new_weight_info(weight_info, curr_iteration):
         num_of_columns = X.shape[1]
         num_of_rows = X.shape[0]
         idx = curr_iteration % num_of_columns
@@ -262,20 +263,7 @@ def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
         return WeightInfo(new_weight, weight_info.all_weights + [new_weight], weight_info.all_costs + [cost])
 
     iterations = range(max_iter)
-    return reduce(calculate_new_weight, iterations, WeightInfo(w0, [], []))
-    # w = w0
-    # data = X.T
-    # num_of_columns = X.shape[1]
-    # for iteration in range(max_iter):
-    #     idx = iteration % num_of_columns
-    #     x = np.atleast_2d(data[idx, :]).T
-    #     expected = y[0, idx]
-    #     step_size = step_size_fn(iteration)
-    #     cost = J(x, expected, np.array(w))
-    #     w += -step_size * dJ(x, expected, np.array(w))
-    #     print("The cost and new weights are ", cost, w, "\n")
-    # return w
-
+    return reduce(calculate_new_weight_info, iterations, WeightInfo(w0, [], []))
 
 
 ############################################################
@@ -352,6 +340,13 @@ def mul(seq):
     '''
     return functools.reduce(operator.mul, seq, 1)
 
+
+@tz.curry
+def polynomial_features(degree, features):
+    poly_feature_fn = make_polynomial_feature_fun(degree)
+    return poly_feature_fn(features)
+
+
 def make_polynomial_feature_fun(order):
     '''
     Transform raw features into polynomial features or order 'order'.
@@ -378,6 +373,24 @@ def make_polynomial_feature_fun(order):
 def eval_predictor(X_train, Y_train, X_test, Y_test, lam):
     th, th0 = ridge_min(X_train, Y_train, lam)
     return np.sqrt(mean_square_loss(X_test, Y_test, th, th0))
+
+
+def avg_rsme_over_lambda(training_data, expected_labels, lambda_vals, num_of_folds):
+    """
+    @param training_data: the data used for training the model
+    @param expected_labels: the expected labels for the training data
+    @param lambda_vals: a collection of values of lambda to use for the model
+    @param num_of_folds: the number of folds to use for cross-validation
+    @return: a pair containing a lambda value which minimizes the average
+    root squared mean error and the resulting root squared mean error
+    """
+    avg_rsme = tz.partial(xval_learning_alg, training_data, expected_labels, k=num_of_folds)
+    return tz.thread_first(avg_rsme,
+                           (map, lambda_vals),
+                           (zip, lambda_vals),
+                           tz.partial(sorted, key=lambda x: x[0], reverse=True),
+                           tz.first)
+
 
 def xval_learning_alg(X, y, lam, k):
     '''
