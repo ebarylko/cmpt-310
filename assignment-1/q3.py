@@ -1,8 +1,6 @@
 import numpy as np
 import csv
 import itertools, functools, operator
-import toolz as tz
-import pandas as pd
 from functools import reduce
 from collections import namedtuple
 from random import choice
@@ -146,7 +144,7 @@ def d_lin_reg_th0(x, th, th0):
     >>> d_lin_reg_th0(x, th, th0).tolist()
     [[1.0, 1.0, 1.0, 1.0]]
     """
-    return 1
+    return np.ones((1, x.shape[1]))
 
 
 def d_square_loss_th0(x, y, th, th0):
@@ -255,9 +253,11 @@ def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
         num_of_columns = X.shape[1]
         num_of_rows = X.shape[0]
         idx = choice(range(num_of_columns))
+
         curr_x = np.array(X.T[idx, :]).reshape(num_of_rows, 1)
         expected_label = y[0, idx]
         step_size = step_size_fn(curr_iteration)
+
         new_weight = weight_info.weight - step_size * dJ(curr_x, expected_label, weight_info.weight)
         cost = J(curr_x, expected_label, weight_info.weight)
         return WeightInfo(new_weight, weight_info.all_weights + [new_weight], weight_info.all_costs + [cost])
@@ -305,7 +305,8 @@ def sgdTest():
 
     d, n = X.shape
     w_init = np.zeros((d+1, 1))
-    assert sgd(X, y, J, dJ, w_init, svm_min_step_size_fn, 1000) == 3
+    final_weight, all_weights, all_costs = sgd(X, y, J, dJ, w_init, svm_min_step_size_fn, 1000)
+    assert final_weight == [[1], [3]]
 ############################################################
 
 def ridge_min(X, y, lam):
@@ -328,7 +329,7 @@ def ridge_min(X, y, lam):
         return ridge_obj_grad(Xj[:-1,:], yj, th[:-1,:], th[-1:,:], lam)
     
     np.random.seed(0)
-    w, fs, ws = sgd(X_extend, y, J, dJ, w_init, svm_min_step_size_fn, 1000)
+    w, fs, ws = q32.sgd(X_extend, y, J, dJ, w_init, svm_min_step_size_fn, 1000)
     return w[:-1,:], w[-1:,:]
 
 #######################################################################
@@ -339,12 +340,6 @@ def mul(seq):
     of all elements in the list/array.  
     '''
     return functools.reduce(operator.mul, seq, 1)
-
-
-@tz.curry
-def polynomial_features(degree, features):
-    poly_feature_fn = make_polynomial_feature_fun(degree)
-    return poly_feature_fn(features)
 
 
 def make_polynomial_feature_fun(order):
@@ -373,23 +368,6 @@ def make_polynomial_feature_fun(order):
 def eval_predictor(X_train, Y_train, X_test, Y_test, lam):
     th, th0 = ridge_min(X_train, Y_train, lam)
     return np.sqrt(mean_square_loss(X_test, Y_test, th, th0))
-
-
-def avg_rsme_over_lambda(training_data, expected_labels, lambda_vals, num_of_folds):
-    """
-    @param training_data: the data used for training the model
-    @param expected_labels: the expected labels for the training data
-    @param lambda_vals: a collection of values of lambda to use for the model
-    @param num_of_folds: the number of folds to use for cross-validation
-    @return: a pair containing a lambda value which minimizes the average
-    root squared mean error and the resulting root squared mean error
-    """
-    avg_rsme = tz.partial(xval_learning_alg, training_data, expected_labels, k=num_of_folds)
-    return tz.thread_first(avg_rsme,
-                           (map, lambda_vals),
-                           (zip, lambda_vals),
-                           tz.partial(sorted, key=lambda x: x[0], reverse=True),
-                           tz.first)
 
 
 def xval_learning_alg(X, y, lam, k):
@@ -464,30 +442,6 @@ def raw(x):
     '''
     return [x]
 
-
-
-def normalize_and_one_hot_encode_data(car_statistics: pd.DataFrame, feature_to_scaling_func):
-    """
-    @param car_statistics: a collection of information about various cars, where each row contains the number
-     of cylinders, displacement, horsepower, and more info
-    @param feature_to_scaling_func: a series of collections where each contains a feature and the function used for
-    scaling that feature
-    @return: scales the features in car_statistics using feature_to_scaling_func and returns the updated values
-    """
-    def scale_feature_by(data, feature_to_func):
-        cpy = data.copy()
-        feature, func = feature_to_func
-        return func(cpy[feature])
-
-    def join_scaled_features(features):
-        return pd.concat(features, axis=1)
-
-    scale_feature_using_func = tz.partial(scale_feature_by, car_statistics)
-
-    return tz.thread_last(feature_to_scaling_func,
-                          (map, scale_feature_using_func),
-                          list,
-                          join_scaled_features)
 
 ######################################################################
 def std_y(row):
