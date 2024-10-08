@@ -5,6 +5,7 @@ import toolz as tz
 import pandas as pd
 from functools import reduce
 from collections import namedtuple
+from random import choice
 
 
 # Takes a list of numbers and returns a column vector:  n x 1
@@ -134,8 +135,7 @@ def d_mean_square_loss_th(x, y, th, th0):
     >>> d_mean_square_loss_th(X[:,0:1], Y[:,0:1], th, th0).tolist()
     [[4.1], [4.1]]
     """
-    number_of_columns = x.shape[1]
-    return d_square_loss_th(x, y, th, th0) / number_of_columns
+    return np.mean(d_square_loss_th(x, y, th, th0), axis=1, keepdims=True)
 
 
 def d_lin_reg_th0(x, th, th0):
@@ -171,7 +171,8 @@ def d_mean_square_loss_th0(x, y, th, th0):
     >>> d_mean_square_loss_th0(X, Y, th, th0).tolist()
     [[4.05]]
     """
-    return np.sum(d_square_loss_th0(x, y, th, th0) / x.shape[1])
+    return np.mean(d_square_loss_th0(x, y, th, th0), keepdims=True, axis=1)
+
 
 def d_ridge_obj_th(x, y, th, th0, lam):
     """Return the derivative of tghe ridge objective value with respect
@@ -189,8 +190,7 @@ def d_ridge_obj_th(x, y, th, th0, lam):
     >>> d_ridge_obj_th(X, Y, th, th0, 100.).tolist()
     [[210.15], [14.05]]
     """
-    number_of_columns = x.shape[1]
-    return np.sum(d_square_loss_th(x, y, th, th0) / number_of_columns, axis=1, keepdims=True) + 2 * lam * th
+    return d_mean_square_loss_th(x, y, th, th0) + 2 * lam * th
 
 
 def d_ridge_obj_th0(x, y, th, th0, lam):
@@ -209,8 +209,8 @@ def d_ridge_obj_th0(x, y, th, th0, lam):
     >>> d_ridge_obj_th0(X, Y, th, th0, 100.).tolist()
     [[4.05]]
     """
-    number_of_columns = x.shape[1]
-    return np.sum(d_square_loss_th0(x, y, th, th0) / number_of_columns, axis=1, keepdims=True)
+    return d_mean_square_loss_th0(x, y, th, th0)
+
 
 #Concatenates the gradients with respect to theta and theta_0
 def ridge_obj_grad(x, y, th, th0, lam):
@@ -254,12 +254,12 @@ def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
     def calculate_new_weight_info(weight_info, curr_iteration):
         num_of_columns = X.shape[1]
         num_of_rows = X.shape[0]
-        idx = curr_iteration % num_of_columns
+        idx = choice(range(num_of_columns))
         curr_x = np.array(X.T[idx, :]).reshape(num_of_rows, 1)
         expected_label = y[0, idx]
         step_size = step_size_fn(curr_iteration)
-        new_weight = weight_info.weight - step_size * dJ(curr_x, expected_label, np.array(weight_info.weight))
-        cost = J(curr_x, expected_label, np.array(weight_info.weight))
+        new_weight = weight_info.weight - step_size * dJ(curr_x, expected_label, weight_info.weight)
+        cost = J(curr_x, expected_label, weight_info.weight)
         return WeightInfo(new_weight, weight_info.all_weights + [new_weight], weight_info.all_costs + [cost])
 
     iterations = range(max_iter)
@@ -454,25 +454,6 @@ def std_vals(data, f):
     sd = (sum(dev)/len(vals))**0.5
     return (avg, sd)
 
-def old_standard(v, std):
-    '''
-    Helper function to be used in auto_data_and_labels. Center v by the 0-th element of std and scale by the 1-st element of std. 
-    >>> data = np.array([1,2,3,4,5])
-    >>> standard(data, (3,1))
-    [array([-2., -1.,  0.,  1.,  2.])]
-    >>> data = np.array([1,2,5,7,8])
-    >>> standard(data, (3,1))
-    [array([-2., -1.,  2.,  4.,  5.])]
-    '''
-    return [(v-std[0])/std[1]]
-
-
-# def standard(feature_column):
-#     """
-#     @param feature_column: a column containing values for a feature
-#     @return: the updated values of feature_column after applying z-score normalization
-#     """
-#     return (feature_column - feature_column.mean()) / feature_column.std()
 
 def raw(x):
     '''
@@ -482,18 +463,6 @@ def raw(x):
     [[1, 2, 3, 4]]
     '''
     return [x]
-
-# def one_hot(feature_column):
-#     """
-#     @param feature_column: a column containing values
-#     @return: the updated column after one-hot encoding it
-#     """
-#     return pd.get_dummies(feature_column)
-#
-
-# def auto_data_and_values(car_statistics, features_to_scaling_function):
-#     normalized_data = normalize_and_one_hot_encode_data(car_statistics, features_to_scaling_function).to_numpy()
-#     return normalized_data[:, 1:].T, normalized_data[:, :1].T,
 
 
 

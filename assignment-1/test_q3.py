@@ -48,6 +48,12 @@ def test_d_ridge_obj_th():
     npt.assert_array_equal(q.d_ridge_obj_th(X, Y, th, th0, 100.), np.array([[210.15], [14.05]]))
 
 
+def test_d_square_loss_th0():
+    X = np.array([[ 1.,  2.,  3.,  4.], [ 1.,  1.,  1.,  1.]])
+    Y = np.array([[ 1. ,  2.2,  2.8,  4.1]])
+    th = np.array([[ 1.  ], [ 0.05]]) ; th0 = np.array([[ 2.]])
+    npt.assert_array_equal(q.d_square_loss_th0(X, Y, th, th0), np.array([[4.1, 3.6999999999999993, 4.5, 3.9000000000000004]]))
+
 def test_d_ridge_obj_th0():
     X = np.array([[1., 2., 3., 4.], [1., 1., 1., 1.]])
     Y = np.array([[1., 2.2, 2.8, 4.1]])
@@ -62,6 +68,12 @@ X = np.array([[0.0, 0.1, 0.2, 0.3, 0.42, 0.52, 0.72, 0.78, 0.84, 1.0],
               [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]])
 y = np.array([[0.4, 0.6, 1.2, 0.1, 0.22, -0.6, -1.5, -0.5, -0.5, 0.0]])
 
+def test_d_mean_square_loss_th():
+    X = np.array([[1., 2., 3., 4.], [1., 1., 1., 1.]])
+    Y = np.array([[1., 2.2, 2.8, 4.1]])
+    th = np.array([[1.], [0.05]]);
+    th0 = np.array([[2.]])
+    npt.assert_array_equal(q.d_mean_square_loss_th(X[:,0:1], Y[:,0:1], th, th0), np.array([[4.1], [4.1]]))
 
 def J(Xi, yi, w):
     # translate from (1-augmented X, y, theta) to (separated X, y, th, th0) format

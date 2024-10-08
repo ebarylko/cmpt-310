@@ -47,6 +47,7 @@ feature_columns_2, _ = q3.auto_data_and_values(car_statistics, features2)
 
 # #standardize the y-values
 scaled_mpg_column, mu, sigma = q3.std_y(mpg_column)
+# print(sigma, mu)
 
 lambda_vals_1 = np.arange(0, 0.11, 0.01)
 lambda_vals_2 = range(0, 210, 20)
@@ -69,11 +70,11 @@ print(q3.avg_rsme_over_lambda(feature_columns_2_deg_2, mpg_column, lambda_vals_1
 
 print(q3.avg_rsme_over_lambda(feature_columns_1_deg_3, mpg_column, lambda_vals_2, 10))
 print(q3.avg_rsme_over_lambda(feature_columns_2_deg_3, mpg_column, lambda_vals_2, 10))
-
-
-#
-# #-------------------------------------------------------------------------------
-# # Analyze auto data
-# #-------------------------------------------------------------------------------
-#
-# #Your code for cross-validation goes here
+# #
+# #
+# # #
+# # # #-------------------------------------------------------------------------------
+# # # # Analyze auto data
+# # # #-------------------------------------------------------------------------------
+# # #
+# # # #Your code for cross-validation goes here
