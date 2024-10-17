@@ -73,7 +73,8 @@ def generate_10_fold_cross_validation_data(data: pd.DataFrame):
 def average_accuracy_and_f1_score(datasets, num_of_neighbours):
     """
     @param datasets: a collection of datasets, each containing training and validation data
-    number of neighbours to use for the model
+
+    to use for the model
     @param num_of_neighbours: the number of neighbours to compare against
     @return: the average accuracy and f1 score of a K-nearest neighbours model applied on each
     dataset, where k = num_of_neighbours
