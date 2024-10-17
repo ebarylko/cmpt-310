@@ -329,7 +329,9 @@ def ridge_min(X, y, lam):
         return ridge_obj_grad(Xj[:-1,:], yj, th[:-1,:], th[-1:,:], lam)
     
     np.random.seed(0)
+
     w, fs, ws = sgd(X_extend, y, J, dJ, w_init, svm_min_step_size_fn, 1000)
+
     return w[:-1,:], w[-1:,:]
 
 #######################################################################
