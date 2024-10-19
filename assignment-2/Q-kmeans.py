@@ -40,25 +40,32 @@ def get_cluster_labels_and_centers(dataset: pd.DataFrame, clusters_and_iteration
 
 
 @tz.curry
-def print_graph(dataset: pd.DataFrame, subgraph, flower_labels_and_clusters):
+def print_graph(dataset: pd.DataFrame, number_of_iterations, flower_labels_and_clusters):
     """
     @param dataset:  a dataset where each row contains the sepal and petal length/width
     of a flower
-    @param subgraph: the subgraph being filled
+    @param number_of_iterations: the number of iterations used when finding the clusters
+    each flower belongs to
     @param flower_labels_and_clusters: the clusters and labels for the flowers in the dataset
     @return: plots a scatterplot comparing the sepal length/width with each cluster
     colored differently
     """
     def convert_cluster_labels_to_color(cluster_labels):
-        cluster_label_to_color = mb.cm.get_cmap("Dark2")
+        cluster_label_to_color = plt.get_cmap("Dark2")
         return tz.thread_last(cluster_labels,
                               Normalize(),
                               cluster_label_to_color)
 
     labels, clusters = flower_labels_and_clusters
-    subgraph.scatter(dataset['sepal length (cm)'],
-                     dataset['sepal width (cm)'],
-                     c=convert_cluster_labels_to_color(labels))
+    plt.xlabel("Sepal length (cm)")
+    plt.ylabel("Sepal width (cm)")
+    num_of_clusters = len(clusters)
+    plt.title(f"Comparing {num_of_clusters} clusters of flowers by their sepal length/width by using {number_of_iterations} iterations "
+              f"of k-means", {"size": 8})
+    plt.scatter(dataset['sepal length (cm)'],
+                dataset['sepal width (cm)'],
+                c=convert_cluster_labels_to_color(labels))
+    plt.savefig(f"{num_of_clusters}_clusters_{number_of_iterations}_iterations.png")
 
 
 def gen_graphs(dataset: pd.DataFrame, cluster_and_max_iteration_configurations):
@@ -71,15 +78,18 @@ def gen_graphs(dataset: pd.DataFrame, cluster_and_max_iteration_configurations):
     @return: generates a graph for each cluster and iteration configuration
     of the clusters of flowers with similar petal lengths and widths
     """
-    fig, plots = plt.subplots(nrows=len(cluster_and_max_iteration_configurations), ncols=1, figsize=(8, 10))
+    # fig, plots = plt.subplots(nrows=len(cluster_and_max_iteration_configurations),
+    #                           ncols=1,
+    #                           figsize=(8, 10))
     get_labels_and_clusters = get_cluster_labels_and_centers(dataset)
     label_and_cluster_data = list(map(get_labels_and_clusters, cluster_and_max_iteration_configurations))
     for i in range(len(label_and_cluster_data)):
-        print_graph(dataset, plots[i], label_and_cluster_data[i])
+        print_graph(dataset,
+                    cluster_and_max_iteration_configurations[i][1],
+                    label_and_cluster_data[i])
     # tz.thread_last(cluster_and_max_iteration_configurations,
     #                (map, get_labels_and_clusters),
     #                (map, print_graph(dataset), plots))
-    fig.savefig("plots.png")
 
 
 clusters_and_iteration_pairs = ((2, 5), (3, 10), (4, 20))
