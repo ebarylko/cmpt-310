@@ -58,13 +58,13 @@ def print_graph(dataset: pd.DataFrame, number_of_iterations, flower_labels_and_c
 
     labels, clusters = flower_labels_and_clusters
     fig = plt.figure()
-    plt.scatter(dataset['sepal length (cm)'],
-                dataset['sepal width (cm)'],
+    plt.scatter(dataset['petal length (cm)'],
+                dataset['petal width (cm)'],
                 c=convert_cluster_labels_to_color(labels))
-    plt.scatter(clusters[:, 0], clusters[:, 1], c='b', marker='x')
+    plt.scatter(clusters[:, 2], clusters[:, 3], c='b', marker='x')
 
-    plt.xlabel("Sepal length (cm)")
-    plt.ylabel("Sepal width (cm)")
+    plt.xlabel("Petal length (cm)")
+    plt.ylabel("Petal width (cm)")
 
     num_of_clusters = len(clusters)
     plt.title(f"Comparing {num_of_clusters} clusters of flowers by their sepal length/width by using {number_of_iterations} iterations "
