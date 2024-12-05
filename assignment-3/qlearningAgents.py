@@ -16,6 +16,7 @@ from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 from backend import ReplayMemory
+import functools as ft
 
 import model
 import backend
@@ -57,7 +58,7 @@ class QLearningAgent(ReinforcementAgent):
           Should return 0.0 if we have never seen a state
           or the Q node value otherwise
         """
-        "*** YOUR CODE HERE ***"
+        return self.qVals.get((state, action), 0)
 
 
 
@@ -68,7 +69,12 @@ class QLearningAgent(ReinforcementAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
-        "*** YOUR CODE HERE ***"
+        possible_actions = self.getLegalActions(state)
+        if len(possible_actions) == 0:
+            return 0
+
+        get_q_val = ft.partial(self.getQValue, state)
+        return max(map(get_q_val, possible_actions))
 
 
     def computeActionFromQValues(self, state):
@@ -77,7 +83,15 @@ class QLearningAgent(ReinforcementAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        "*** YOUR CODE HERE ***"
+        possible_actions = self.getLegalActions(state)
+        if len(possible_actions) == 0:
+            return None
+
+        get_q_val = ft.partial(self.getQValue, state)
+        q_vals = list(map(get_q_val, possible_actions))
+        idx_of_best_action = np.argmax(q_vals)
+        return possible_actions[idx_of_best_action]
+
 
 
     def getAction(self, state):
@@ -108,6 +122,20 @@ class QLearningAgent(ReinforcementAgent):
           NOTE: You should never call this function,
           it will be called on your behalf
         """
+        def get_max_q_val(new_state):
+            potential_actions = self.getLegalActions(new_state)
+            obtain_q_val = ft.partial(self.getQValue, new_state)
+            return 0 if len(potential_actions) == 0 else max(map(obtain_q_val, potential_actions))
+
+        old_q_val = self.getQValue(state, action)
+        update_factor = 1 - self.alpha
+        print("The reward is ", reward)
+        print("The old q-value is ", old_q_val)
+
+        self.qVals[(state, action)] = (old_q_val * update_factor +
+                                       self.alpha * (reward +
+                                                     self.discount * get_max_q_val(nextState)))
+
         "*** YOUR CODE HERE ***"
 
 

@@ -130,10 +130,7 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         q_vals_of_actions = list(map(ft.partial(self.computeQValueFromValues, state),
                                      next_actions))
-        #print("The q-values are ", q_vals_of_actions)
         idx_of_best_action = np.argmax(q_vals_of_actions)
-        #print("The idx is ", idx_of_best_action)
-        #print("The best action is ", next_actions[idx_of_best_action])
         return next_actions[idx_of_best_action]
 
 
