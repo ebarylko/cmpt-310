@@ -129,8 +129,6 @@ class QLearningAgent(ReinforcementAgent):
 
         old_q_val = self.getQValue(state, action)
         update_factor = 1 - self.alpha
-        print("The reward is ", reward)
-        print("The old q-value is ", old_q_val)
 
         self.qVals[(state, action)] = (old_q_val * update_factor +
                                        self.alpha * (reward +
